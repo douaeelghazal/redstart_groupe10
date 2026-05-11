@@ -284,7 +284,6 @@ def _(M, l):
 
     print(f"Moment d'inertie J = {J} kg·m²")
     print(f"J = {J:.4f} kg·m²")
-
     return (J,)
 
 
@@ -593,9 +592,9 @@ def _(J, M, g, l, np, sci):
 
             return [vx, ax, vy, ay, omega, alpha]
 
-    
+
         res = sci.solve_ivp(dynamics, t_span, y0, dense_output=True, method='RK45')
-    
+
         return res.sol
 
     return (redstart_solve,)
@@ -830,7 +829,7 @@ def _(np, plt):
 
 
     def controlled_landing_simulation():
-    
+
         # Parameters
         M = 1.0
         g = 1.0
@@ -984,42 +983,34 @@ def _(mo):
     return
 
 
-@app.cell
-def _(svg):
-    def world(view_box, *objects):
-        x_min, x_max, y_min, y_max = view_box
-        w = x_max - x_min
-        h = y_max - y_min
+@app.function
+def world(view_box, *objects):
+    x_min, x_max, y_min, y_max = view_box
+    w = x_max - x_min
+    h = y_max - y_min
 
-        # Natural coordinates viewBox (no manual inversion)
-        vb = f"{x_min} {y_min} {w} {h}"
+    # viewBox avec y inversé (SVG : y vers le bas, physique : y vers le haut)
+    vb = f"{x_min} {-y_max} {w} {h}"
 
-        # Sky: from y_min to y_max
-        sky = svg.rect(x=x_min, y=y_min, width=w, height=h, fill="#87CEEB")
+    sky    = f'<rect x="{x_min}" y="{-y_max}" width="{w}" height="{h}" fill="#87CEEB"/>'
+    ground = f'<rect x="{x_min}" y="0" width="{w}" height="{-y_min}" fill="#8B7355"/>'
+    target = f'<rect x="-1" y="-0.1" width="2" height="0.1" fill="green"/>'
 
-        # Ground: from y=0 down to y_min (if y_min < 0)
-        ground_height = max(0, -y_min)
-        ground = svg.rect(x=x_min, y=0, width=w, height=ground_height, fill="#8B7355")
+    inner = "\n".join(
+        [sky, ground, target] + [str(o) for o in objects]
+    )
 
-        # Target: 2m wide green pad at y=0
-        target = svg.rect(x=-1, y=-0.05, width=2, height=0.05, fill="green")
-
-        inner = "\n".join([
-            str(sky), str(ground), str(target)
-        ] + [str(obj) for obj in objects])
-
-        return (
-            f'<svg xmlns="http://www.w3.org/2000/svg" '
-            f'viewBox="{vb}" width="300" height="300" '
-            f'style="transform: scaleY(-1); display:block;">'
-            f'{inner}</svg>'
-        )
-
-    return (world,)
+    # PAS de scaleY(-1) global — le viewBox suffit à inverser Y
+    return (
+        f'<svg xmlns="http://www.w3.org/2000/svg" '
+        f'viewBox="{vb}" width="300" height="300" '
+        f'style="display:block;">'
+        f'{inner}</svg>'
+    )
 
 
 @app.cell
-def _(mo, svg, world):
+def _(mo, svg):
     mo.hstack(
         [
             # 1. Monde vide
@@ -1182,7 +1173,7 @@ def _(M, g, l, np, svg):
 
 
 @app.cell
-def _(M, booster, g, l, mo, np, world):
+def _(M, booster, g, l, mo, np):
     mo.hstack(
         [
             mo.Html(
@@ -1261,81 +1252,70 @@ def _(mo):
 @app.cell
 def _(M, g, l, np):
     def booster_anim(x, y, theta, f, phi, T=5.0):
-        """
-        Génère un fragment SVG animé du booster.
-    
-        Arguments:
-            x, y, theta, f, phi : fonctions du temps t
-            T : durée de l'animation en secondes
-    
-        Retourne:
-            str : fragment SVG animé
-        """
-        N = 60  # nombre d'échantillons
+        N = 60
         ts = np.linspace(0, T, N)
 
-        # --- Keyframes ---
-        # Translation : "x1 y1;x2 y2;..."  (en coordonnées SVG, y inversé)
+        # Y déjà inversé par le viewBox → on passe -y(t)
         translations = ";".join(
-            f"{x(t):.4f} {-y(t):.4f}" for t in ts
+            f"{x(t):.4f},{-y(t):.4f}" for t in ts
         )
 
-        # Rotation : angle en degrés (theta positif = sens anti-horaire → négatif en SVG)
+        # Rotation : SVG horaire, physique anti-horaire → inverser le signe
         rotations = ";".join(
             f"{-np.degrees(theta(t)):.4f}" for t in ts
         )
 
-        # Longueur de la flamme : l/2 quand f = M*g
+        # Longueur flamme : l/2 quand f = M*g
         flame_len = ";".join(
-            f"{f(t) * (l / 2) / (M * g):.4f}" for t in ts
+            f"{max(0.0, f(t)) * (l / 2) / (M * g):.4f}" for t in ts
         )
 
-        # Angle de la flamme en degrés (phi, dans le repère du booster)
+        # Angle flamme (dans repère booster)
         flame_rot = ";".join(
             f"{np.degrees(phi(t)):.4f}" for t in ts
         )
 
-        # --- Dimensions ---
-        half_l = l / 2
-        body_w = 0.2
+        half_l  = l / 2
+        body_w  = 0.2
         flame_w = 0.1
 
-        # Corps : rectangle centré sur le CDM
+        # Corps du booster (centré sur CDM)
         body = (
             f'<rect x="{-body_w/2}" y="{-half_l}" '
             f'width="{body_w}" height="{l}" '
-            f'fill="#aab4c8" rx="0.04" stroke="#667" stroke-width="0.01"/>'
+            f'fill="#aab4c8" rx="0.04" stroke="#556" stroke-width="0.01"/>'
         )
 
-        # Nez du booster (pointe)
+        # Nez (haut du booster = +half_l en coords locales)
         nose = (
-            f'<polygon points="0,{half_l} {-body_w/2},{half_l - 0.15} '
-            f'{body_w/2},{half_l - 0.15}" fill="#e74c3c"/>'
+            f'<polygon points="0,{-half_l} {-body_w/2},{-half_l+0.15} '
+            f'{body_w/2},{-half_l+0.15}" fill="#e74c3c"/>'
         )
 
-        # Flamme : part de la base (−half_l), orientée vers le bas
-        # Elle est dans un groupe avec rotation phi autour de la base
+        # Flamme : part de la BASE (+half_l en SVG = bas physique)
+        # La flamme pousse VERS LE BAS (y positif en SVG)
         flame_svg = (
-            f'<g transform="translate(0, {-half_l})">'
-            f'  <rect x="{-flame_w/2}" y="0" width="{flame_w}" height="0" '
-            f'        fill="#f39c12" opacity="0.9">'
+            f'<g>'
+            f'  <rect x="{-flame_w/2}" y="{half_l}" '
+            f'        width="{flame_w}" height="0" fill="#f39c12" opacity="0.9">'
             f'    <animate attributeName="height" '
             f'             values="{flame_len}" '
             f'             dur="{T}s" repeatCount="indefinite"/>'
             f'  </rect>'
             f'  <animateTransform attributeName="transform" type="rotate" '
             f'                    values="{flame_rot}" '
-            f'                    dur="{T}s" repeatCount="indefinite" additive="sum"/>'
+            f'                    origin="{0} {half_l}" '
+            f'                    dur="{T}s" repeatCount="indefinite"/>'
             f'</g>'
         )
 
-        # Groupe principal : translation + rotation du booster entier
+        # Groupe principal : position (animateMotion) + rotation
         booster_svg = (
             f'<g>'
             f'  {body}{nose}{flame_svg}'
-            f'  <animateTransform attributeName="transform" type="translate" '
-            f'                    values="{translations}" '
-            f'                    dur="{T}s" repeatCount="indefinite"/>'
+            f'  <animateMotion '
+            f'     values="{translations}" '
+            f'     dur="{T}s" repeatCount="indefinite"/>'
             f'  <animateTransform attributeName="transform" type="rotate" '
             f'                    values="{rotations}" '
             f'                    dur="{T}s" repeatCount="indefinite" additive="sum"/>'
@@ -1348,7 +1328,7 @@ def _(M, g, l, np):
 
 
 @app.cell
-def _(M, booster_anim, g, l, mo, np, world):
+def _(M, booster_anim, g, l, mo, np):
     def booster_anim_0():
         T = 5.0
         def x(t):
@@ -1388,7 +1368,7 @@ def _(mo):
 
 
 @app.cell
-def _(M, booster_anim, g, mo, np, redstart_solve, world, y0):
+def _(M, booster_anim, g, mo, np, redstart_solve, y0):
 
     # Fonction utilitaire pour créer une animation à partir d'une simulation
     def create_animation(sol, f_fun, phi_fun, T, view_box=[-3, 3, -2, 4]):
