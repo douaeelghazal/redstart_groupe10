@@ -71,7 +71,7 @@ def _():
     import numpy as np
     import numpy.linalg as la
 
-    return (np,)
+    return np, plt, sci
 
 
 @app.cell(hide_code=True)
@@ -134,7 +134,7 @@ def _():
     g = 1.0      #m/s²
     M = 1.0      #kg
     l = 2.0      #m
-    return M, l
+    return M, g, l
 
 
 @app.cell(hide_code=True)
@@ -236,7 +236,7 @@ def _(M, l):
     print(f"Moment d'inertie J = {J} kg·m²")
     print(f"J = {J:.4f} kg·m²")
 
-    return
+    return (J,)
 
 
 @app.cell(hide_code=True)
@@ -290,6 +290,157 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    En mécanique, le moment (scalaire) d'une force $\vec{F}$ appliquée au point $P$ par rapport au point $G$ est donné par :
+
+    $$
+    \boxed{\tau = (\overrightarrow{GP} \times \vec{F}) \cdot \vec{e}_z}
+    $$
+
+    En 2D, dans un repère orthonormé direct $(G, \vec{e}_x, \vec{e}_y, \vec{e}_z)$, cette expression devient :
+
+    $$
+    \tau = (GP)_x \, F_y - (GP)_y \, F_x \qquad \text{(forme scalaire)}
+    $$
+
+
+
+    On se place dans le **repère lié au booster** $R_b = (G, \vec{e}_x, \vec{e}_y)$ :
+
+    - Origine : centre de masse $G$ du booster
+    - $\vec{e}_y$ : axe du booster, orienté **vers le haut**
+    - $\vec{e}_x$ : perpendiculaire à l'axe du booster, orienté **vers la droite**
+    - $\vec{e}_z = \vec{e}_x \times \vec{e}_y$ : perpendiculaire au plan, sortant
+
+    Ce repère est orthonormé direct et mobile (il tourne avec le booster).
+
+
+
+
+
+    Le réacteur est situé à la **base** du booster, à une distance $\dfrac{\ell}{2}$ **sous** le centre de masse $G$.
+
+    Dans $R_b$ :
+
+    $$
+    \boxed{\overrightarrow{GP} = \begin{pmatrix} 0 \\ -\dfrac{\ell}{2} \\ 0 \end{pmatrix}_{R_b}}
+    $$
+
+
+    La poussée a une intensité $f \geq 0$ et fait un angle $\phi$ par rapport à l'axe $\vec{e}_y$ du booster.
+
+    Dans $R_b$ :
+
+    $$
+    \boxed{\vec{F} = \begin{pmatrix} f \sin\phi \\ f \cos\phi \\ 0 \end{pmatrix}_{R_b}}
+    $$
+
+
+
+    Appliquons la formule $\tau = r_x F_y - r_y F_x$ :
+
+    $$
+    \begin{aligned}
+    \tau &= (0) \cdot (f \cos\phi) - \left(-\dfrac{\ell}{2}\right) \cdot (f \sin\phi) \\
+         &= 0 + \dfrac{\ell}{2} \, f \sin\phi
+    \end{aligned}
+    $$
+
+    $$
+    \boxed{\tau = \dfrac{\ell}{2} \, f \sin\phi}
+    $$
+
+    **Interprétation du signe :**
+    - $\phi > 0$ $\Rightarrow$ $\sin\phi > 0$ $\Rightarrow$ $\tau > 0$ $\Rightarrow$ rotation **anti-horaire** (sens trigonométrique)
+
+
+
+    Dans le repère fixe galiléen, autour du centre de masse $G$ :
+
+    $$
+    J \, \ddot{\theta} = \sum \tau_{\text{ext}}
+    $$
+
+    Seule la poussée crée un couple (le poids s'applique en $G$, bras de levier nul).
+
+    Donc :
+
+    $$
+    J \, \ddot{\theta} = \dfrac{\ell}{2} \, f \sin\phi
+    $$
+
+    $$
+    \boxed{\ddot{\theta} = \dfrac{\ell}{2J} \, f \sin\phi}
+    $$
+
+
+
+
+    Le booster est modélisé comme une **tige mince uniforme** de masse $M$ et longueur $\ell$.
+
+    Moment d'inertie par rapport au centre de masse :
+
+    $$
+    \boxed{J = \dfrac{1}{12} M \ell^2}
+    $$
+
+
+
+    En substituant $J$ :
+
+    $$
+    \begin{aligned}
+    \ddot{\theta} &= \dfrac{\ell}{2 \cdot \dfrac{1}{12} M \ell^2} \, f \sin\phi \\[8pt]
+                  &= \dfrac{\ell}{\dfrac{1}{6} M \ell^2} \, f \sin\phi \\[8pt]
+                  &= \dfrac{6}{M \ell} \, f \sin\phi
+    \end{aligned}
+    $$
+
+    $$
+    \boxed{\ddot{\theta} = \dfrac{6}{M \ell} \, f \sin\phi}
+    $$
+
+    ---
+
+    ##  Application numérique
+
+    Données :
+    $$
+    M = 1\ \text{kg}, \qquad \ell = 2\ \text{m}, \qquad g = 1\ \text{m/s}^2
+    $$
+
+    Calcul :
+    $$
+    \frac{6}{M \ell} = \frac{6}{1 \times 2} = 3
+    $$
+
+    $$
+    \boxed{\ddot{\theta} = 3 \, f \sin\phi}
+    $$
+    """)
+    return
+
+
+@app.cell
+def _(J, M, l, np):
+    def torque(f, phi, l=l):
+        return 0.5 * l * f * np.sin(phi)
+
+
+    def theta_ddot(f, phi, J=J, l=l):
+        return torque(f, phi, l) / J
+
+
+    def theta_ddot_simplified(f, phi, M=M, l=l):
+        return (6.0 / (M * l)) * f * np.sin(phi)
+
+
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Vector Field
 
     Denote
@@ -306,6 +457,36 @@ def _(mo):
     $$
     \dot{s} = F(s, f, \phi).
     $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    We model the booster motion in the 2D plane using the state vector:
+
+    $$ s = (x, y, v_x, v_y, \theta, \omega) \in \mathbb{R}^6 $$
+
+    where $x, y$ are the position of the center of mass, $v_x, v_y$ the linear velocities, $\theta$ the inclination angle, and $\omega = \dot{\theta}$ the angular velocity.
+
+    The system is controlled by the thrust force $f$ and its orientation $\phi$.
+
+    The dynamics are given by Newton's laws:
+
+    $$ \dot{x} = v_x, \quad \dot{y} = v_y $$
+
+    $$ \dot{v_x} = -\frac{f}{M}\sin(\theta+\phi), \quad \dot{v_y} = \frac{f}{M}\cos(\theta+\phi) - g $$
+
+    $$ \dot{\theta} = \omega, \quad \dot{\omega} = \frac{\ell}{2J} f \sin(\phi) $$
+
+    The system can be written in compact form:
+
+    $$ \dot{s} = F(s, f, \phi) $$
+
+    where $F$ is defined as:
+
+    $$ F(s,f,\phi) = \begin{pmatrix} v_x \\ v_y \\ -\frac{f}{M}\sin(\theta+\phi) \\ \frac{f}{M}\cos(\theta+\phi) - g \\ \omega \\ \frac{\ell}{2J} f \sin(\phi) \end{pmatrix} $$
     """)
     return
 
@@ -350,6 +531,27 @@ def _(mo):
     return
 
 
+@app.cell
+def _(J, M, g, l, np, sci):
+    def redstart_solve(t_span, y0, f_phi):
+        def dynamics(t, s):
+            x, vx, y, vy, theta, omega = s
+            f, phi = f_phi(t, s)
+
+            ax = -f * np.sin(theta + phi) / M
+            ay = (f * np.cos(theta + phi) / M) - g
+            alpha = (l/2 * f * np.sin(phi)) / J
+
+            return [vx, ax, vy, ay, omega, alpha]
+
+    
+        res = sci.solve_ivp(dynamics, t_span, y0, dense_output=True, method='RK45')
+    
+        return res.sol
+
+    return (redstart_solve,)
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -364,6 +566,46 @@ def _(mo):
     return
 
 
+@app.cell
+def _(l, np, plt, redstart_solve):
+
+    def free_fall_f_phi(t, s):
+        return np.array([0.0, 0.0])
+
+    t_span = (0, 6)
+
+    y0 = [
+        0.0,
+        0.0,
+        10.0,
+        0.0,
+        0.0,
+        0.0
+    ]
+
+    sol = redstart_solve(t_span, y0, free_fall_f_phi)
+
+    t = np.linspace(0, 6, 500)
+    y_sol = sol(t)
+
+    y = y_sol[2]
+
+    plt.figure()
+
+    plt.plot(t, y, label="y(t) center of mass")
+    plt.axhline(l, linestyle="--", color="gray", label="y = ℓ = 2 m")
+    plt.axvline(4, linestyle=":", color="red", label="t = 4 s (theoretical)")
+
+    plt.xlabel("Time t (s)")
+    plt.ylabel("Height y (m)")
+    plt.title("Redstart Free Fall Verification")
+    plt.grid()
+    plt.legend()
+
+    plt.show()
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
@@ -375,6 +617,246 @@ def _(mo):
 
     Simulate the corresponding scenario, display graphically the results and check that your solution works as expected.
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    We consider a purely vertical motion with:
+
+    - $x = 0$
+    - $\theta = 0$
+    - $\phi = 0$ (thrust aligned with the vertical axis)
+
+    The dynamics reduce to a 1D model:
+
+    $$
+    \begin{cases}
+    \dot{y} = v_y \\[4pt]
+    \dot{v}_y = \dfrac{f(t)}{M} - g
+    \end{cases}
+    $$
+
+    with:
+
+    $$
+    M = 1,\qquad g = 1,\qquad f(t) \geq 0
+    $$
+
+
+    We impose:
+
+    $$
+    y(0) = 10,\qquad v_y(0) = -2
+    $$
+
+    $$
+    y(5) = 1,\qquad v_y(5) = 0
+    $$
+
+
+    We seek a polynomial trajectory of degree 3:
+
+    $$
+    y(t) = a t^3 + b t^2 + c t + d
+    $$
+
+    Its derivative is:
+
+    $$
+    v_y(t) = \dot{y}(t) = 3a t^2 + 2b t + c
+    $$
+
+
+    **At $t = 0$:**
+
+    $$
+    d = 10,\qquad c = -2
+    $$
+
+    **At $t = 5$:**
+
+    Position:
+
+    $$
+    125a + 25b + 5c + d = 1
+    $$
+
+    $$
+    125a + 25b - 10 + 10 = 1
+    $$
+
+    $$
+    125a + 25b = 1 \qquad (1)
+    $$
+
+    Velocity:
+
+    $$
+    75a + 10b + c = 0
+    $$
+
+    $$
+    75a + 10b - 2 = 0
+    $$
+
+    $$
+    75a + 10b = 2 \qquad (2)
+    $$
+
+
+
+    From equation (1):
+
+    $$
+    b = \frac{1 - 125a}{25}
+    $$
+
+    Substituting into (2):
+
+    $$
+    75a + 10 \cdot \frac{1 - 125a}{25} = 2
+    $$
+
+    $$
+    75a + 0.4 - 50a = 2
+    $$
+
+    $$
+    25a = 1.6
+    $$
+
+    $$
+    a = 0.064
+    $$
+
+    Then:
+
+    $$
+    b = \frac{1 - 8}{25} = -0.28
+    $$
+
+
+    $$
+    \boxed{y(t) = 0.064 t^3 - 0.28 t^2 - 2t + 10}
+    $$
+
+    $$
+    \boxed{v_y(t) = 0.192 t^2 - 0.56 t - 2}
+    $$
+
+
+    The dynamic equation gives:
+
+    $$
+    \dot{v}_y = f(t) - g \quad \text{with } g = 1
+    $$
+
+    Therefore:
+
+    $$
+    f(t) = \dot{v}_y + 1
+    $$
+
+    Now:
+
+    $$
+    \dot{v}_y(t) = 0.384 t - 0.56
+    $$
+
+    Thus:
+
+    $$
+    \boxed{f(t) = 0.384 t + 0.44}
+    $$
+    """)
+    return
+
+
+@app.cell
+def _(np, plt):
+
+    from scipy.integrate import solve_ivp
+
+
+    def controlled_landing_simulation():
+    
+        # Parameters
+        M = 1.0
+        g = 1.0
+        l = 2.0
+
+        # Control law (from analytical solution)
+        def f_phi(t, y):
+            f = 0.384 * t + 0.44
+            phi = 0.0
+            return np.array([f, phi])
+
+        # Dynamics
+        def dynamics(t, state):
+            x, vx, y_pos, vy, theta, omega = state
+            f, phi = f_phi(t, state)
+
+            dxdt = vx
+            dvxdt = -f * np.sin(theta + phi) / M
+            dydt = vy
+            dvydt = f * np.cos(theta + phi) / M - g
+            dthetadt = omega
+            domegadt = 3 * f * np.sin(phi)  # simplified model
+
+            return [dxdt, dvxdt, dydt, dvydt, dthetadt, domegadt]
+
+        # Initial conditions
+        y0 = [0.0, 0.0, 10.0, -2.0, 0.0, 0.0]
+
+        # Time span
+        t_span = (0.0, 5.0)
+        t_eval = np.linspace(0, 5, 1000)
+
+        # Solve
+        sol = solve_ivp(dynamics, t_span, y0, t_eval=t_eval)
+
+        # Extract
+        t = sol.t
+        y_pos = sol.y[2]
+        vy = sol.y[3]
+        f = 0.384 * t + 0.44
+
+        # Plot
+        plt.figure(figsize=(10, 8))
+
+        plt.subplot(3, 1, 1)
+        plt.plot(t, y_pos)
+        plt.axhline(1, linestyle='--')
+        plt.title("Controlled Landing")
+        plt.ylabel("y(t)")
+        plt.grid()
+
+        plt.subplot(3, 1, 2)
+        plt.plot(t, vy)
+        plt.axhline(0, linestyle='--')
+        plt.ylabel("vy(t)")
+        plt.grid()
+
+        plt.subplot(3, 1, 3)
+        plt.plot(t, f)
+        plt.ylabel("f(t)")
+        plt.xlabel("t")
+        plt.grid()
+
+        plt.tight_layout()
+        plt.show()
+
+        # Verification
+        print("y(5) =", y_pos[-1])
+        print("vy(5) =", vy[-1])
+
+
+        return sol
+
+
+    controlled_landing_simulation()
     return
 
 
