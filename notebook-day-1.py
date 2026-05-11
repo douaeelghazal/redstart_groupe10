@@ -161,12 +161,61 @@ def _(np):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    On considère la force de poussée exercée par le moteur sur le booster.
+
+    Cette force est de norme $f$ et est dirigée selon l'axe du moteur, qui peut être incliné d'un angle $\phi$ par rapport à l'axe du booster.
+
+    Le booster lui-même est orienté d'un angle $\theta$ dans le repère inertiel.
+
+    Ainsi, l'orientation absolue de la force dans le repère fixe est :
+
+    $$
+    \alpha = \theta + \phi
+    $$
+
+
+
+    Dans le repère orthonormé $(\vec{e}_x, \vec{e}_y)$, on projette le vecteur force :
+
+    - composante horizontale (axe $x$)
+    - composante verticale (axe $y$)
+
+    La force s'écrit alors :
+
+    $$
+    \vec{F} = \begin{pmatrix} f_x \\ f_y \end{pmatrix}
+    $$
+
+
+
+    En utilisant la trigonométrie dans le plan :
+
     $$
     f_x = -f \sin(\theta + \phi)
     $$
 
     $$
-    f_y = f \cos(\theta + \phi)
+    f_y =  f \cos(\theta + \phi)
+    $$
+
+
+
+    ## Justification du signe
+
+    Le signe négatif dans $f_x$ provient du choix de convention :
+
+    - $\theta$ est mesuré positivement dans le sens trigonométrique
+    - la projection sur l'axe $x$ dépend de l'orientation du repère
+    - la décomposition respecte la rotation du vecteur force dans le plan
+
+
+
+    $$
+    \boxed{f_x = -f \sin(\theta + \phi)}
+    $$
+
+    $$
+    \boxed{f_y =  f \cos(\theta + \phi)}
     $$
     """)
     return
