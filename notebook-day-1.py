@@ -134,7 +134,7 @@ def _():
     g = 1.0      #m/s²
     M = 1.0      #kg
     l = 2.0      #m
-    return
+    return M, l
 
 
 @app.cell(hide_code=True)
@@ -223,6 +223,56 @@ def _(mo):
     ## 🧩 Moment of inertia
 
     Compute the [moment of inertia](https://en.wikipedia.org/wiki/Moment_of_inertia) $J$ of the booster and define the corresponding Python variable `J`.
+    """)
+    return
+
+
+@app.cell
+def _(M, l):
+
+    #Moment d'inertie (tige mince uniforme autour de son centre)
+    J = (1/12) * M * l**2
+
+    print(f"Moment d'inertie J = {J} kg·m²")
+    print(f"J = {J:.4f} kg·m²")
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    **Moment d'inertie d'une tige uniforme de longueur $\ell$ autour de son centre**
+
+    On part de la définition générale du moment d'inertie :
+
+    $$J = \int r^2 \, dm$$
+
+    La tige est uniforme, donc sa densité linéique vaut :
+
+    $$\lambda = \frac{M}{\ell}$$
+
+    Ainsi :
+
+    $$dm = \lambda \, dx = \frac{M}{\ell} \, dx$$
+
+    L'axe de rotation passe par le centre, donc la distance d'un élément $dm$ à l'axe est $|x|$, où $x$ varie de $-\ell/2$ à $\ell/2$ :
+
+    $$J = \int_{-\ell/2}^{\ell/2} x^2 \cdot \frac{M}{\ell} \, dx$$
+
+    $$J = \frac{M}{\ell} \int_{-\ell/2}^{\ell/2} x^2 \, dx$$
+
+    $$\int_{-\ell/2}^{\ell/2} x^2 \, dx = \left[ \frac{x^3}{3} \right]_{-\ell/2}^{\ell/2} = \frac{(\ell/2)^3}{3} - \frac{(-\ell/2)^3}{3}$$
+
+    $$= \frac{\ell^3/8}{3} + \frac{\ell^3/8}{3} = \frac{\ell^3}{12}$$
+
+    $$J = \frac{M}{\ell} \times \frac{\ell^3}{12} = \frac{M \ell^2}{12}$$
+
+    $$\boxed{J = \frac{1}{12} M \ell^2}$$
+
+    **Application numérique** ($M = 1$ kg, $\ell = 2$ m) :
+
+    $$J = \frac{1}{12} \cdot M \cdot \ell^2 = \frac{1}{12} \cdot 1 \cdot 2^2 = \frac{4}{12} = \frac{1}{3} \; \text{kg} \cdot \text{m}^2$$
     """)
     return
 
