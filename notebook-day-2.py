@@ -1398,7 +1398,7 @@ def _(J, M, g, l, np):
     A, B = AB_matrices(M, g, l, J)
     print("A =\n", A)
     print("B =\n", B)
-    return (A,)
+    return A, B
 
 
 @app.cell(hide_code=True)
@@ -1497,6 +1497,123 @@ def _(mo):
 
     Is the linearized model controllable?
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    To determine whether the linearized system is controllable, we compute the controllability matrix:
+
+    \[
+    \mathcal C
+    =
+    [B \ AB \ A^2B \ \dots \ A^{n-1}B]
+    \]
+
+    The system matrices are:
+
+    \[
+    A=
+    \begin{bmatrix}
+    0&1&0&0&0&0\\
+    0&0&0&0&-1&0\\
+    0&0&0&1&0&0\\
+    0&0&0&0&0&0\\
+    0&0&0&0&0&1\\
+    0&0&0&0&0&0
+    \end{bmatrix}
+    \]
+
+    and
+
+    \[
+    B=
+    \begin{bmatrix}
+    0&0\\
+    0&-1\\
+    0&0\\
+    1&0\\
+    0&0\\
+    0&-3
+    \end{bmatrix}
+    \]
+
+    We first compute:
+
+    \[
+    AB=
+    \begin{bmatrix}
+    0&-1\\
+    0&0\\
+    1&0\\
+    0&0\\
+    0&-3\\
+    0&0
+    \end{bmatrix}
+    \]
+
+    Then:
+
+    \[
+    A^2B=
+    \begin{bmatrix}
+    0&0\\
+    0&3\\
+    0&0\\
+    0&0\\
+    0&0\\
+    0&0
+    \end{bmatrix}
+    \]
+
+    The controllability matrix becomes:
+
+    \[
+    \mathcal C
+    =
+    \left[
+    \begin{array}{cccccc}
+    0&0&0&-1&0&0\\
+    0&-1&0&0&0&3\\
+    0&0&1&0&0&0\\
+    1&0&0&0&0&0\\
+    0&0&0&-3&0&0\\
+    0&-3&0&0&0&0
+    \end{array}
+    \right]
+    \]
+
+    We observe that the columns are linearly independent. Therefore:
+
+    \[
+    \text{rank}(\mathcal C)=6
+    \]
+
+    Since the rank is equal to the dimension of the state vector (\(n=6\)), the system is completely controllable.
+
+    \[
+    \boxed{
+    \text{The linearized system is controllable.}
+    }
+    \]
+    """)
+    return
+
+
+@app.cell
+def _(A, B, np):
+    def controllability_matrix(A, B):
+        n = A.shape[0]
+        blocks = [np.linalg.matrix_power(A, k) @ B for k in range(n)]
+        return np.hstack(blocks)
+
+    C = controllability_matrix(A, B)
+    rank = np.linalg.matrix_rank(C)
+    print(f"Controllability matrix shape: {C.shape}")
+    print(f"Rank: {rank}")
+    print(f"State space dimension: {A.shape[0]}")
+    print(f"Controllable: {rank == A.shape[0]}")
     return
 
 
