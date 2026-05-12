@@ -2371,6 +2371,260 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    The reduced lateral dynamics are
+
+    \[
+    \dot X = AX + B \Delta \phi
+    \]
+
+    with
+
+    \[
+    X =
+    \begin{bmatrix}
+    \Delta x \\
+    \Delta \dot x \\
+    \Delta \theta \\
+    \Delta \dot \theta
+    \end{bmatrix}
+    \]
+
+    \[
+    A =
+    \begin{bmatrix}
+    0 & 1 & 0 & 0 \\
+    0 & 0 & -1 & 0 \\
+    0 & 0 & 0 & 1 \\
+    0 & 0 & 0 & 0
+    \end{bmatrix},
+    \qquad
+    B =
+    \begin{bmatrix}
+    0 \\
+    -1 \\
+    0 \\
+    -3
+    \end{bmatrix}
+    \]
+
+    We use the state feedback law
+
+    \[
+    \Delta \phi = -K_{pp} X
+    \]
+
+    and choose the desired poles
+
+    \[
+    \{-0.25,\,-0.30,\,-0.35,\,-0.40\}
+    \]
+
+    because poles with real parts around \(-0.2\) give a settling time approximately equal to
+
+    \[
+    T_s \approx \frac{4}{0.2} = 20 \text{ s}
+    \]
+
+    Using pole placement,
+
+    \[
+    K_{pp} = \mathrm{place}(A,B,\text{poles})
+    \]
+
+    gives
+
+    \[
+    K_{pp} =
+    \begin{bmatrix}
+    -0.00357 &
+    -0.02655 &
+    -0.21310 &
+    -0.43333
+    \end{bmatrix}
+    \]
+
+    The closed-loop matrix is
+
+    \[
+    A_{cl} = A - BK_{pp}
+    \]
+
+    whose eigenvalues are exactly
+
+    \[
+    \{-0.25,\,-0.30,\,-0.35,\,-0.40\}
+    \]
+
+    Therefore, the closed-loop system is asymptotically stable and satisfies
+
+    \[
+    \Delta x(t) \to 0,
+    \qquad
+    \Delta \theta(t) \to 0
+    \]
+
+    in approximately \(20\) seconds.
+    """)
+    return
+
+
+@app.cell
+def _(np, plt):
+    from scipy.signal import place_poles
+    from scipy.integrate import solve_ivp
+
+
+    A2 = np.array([
+        [0, 1,  0, 0],
+        [0, 0, -1, 0],
+        [0, 0,  0, 1],
+        [0, 0,  0, 0]
+    ])
+
+    B2 = np.array([
+        [0],
+        [-1],
+        [0],
+        [-3]
+    ])
+
+
+    # DESIRED POLES
+
+
+    desired_poles = [-0.25, -0.30, -0.35, -0.40]
+
+    Kpp = place_poles(A2, B2, desired_poles).gain_matrix
+
+    print(Kpp)
+    print("Kpp =")
+    print(Kpp)
+
+
+    # CLOSED-LOOP MATRIX
+
+
+    Acl = A2 - B2 @ Kpp
+
+    print("\nClosed-loop eigenvalues:")
+    print(np.linalg.eigvals(Acl))
+
+
+    # CLOSED-LOOP DYNAMICS
+
+
+    def closed_loop_dynamics(time, X):
+
+        # control law
+        dphi = -(Kpp @ X).item()
+
+        # state derivative
+        dX = A2 @ X + B2.flatten() * dphi
+
+        return dX
+
+    # INITIAL CONDITIONS
+
+
+    X0 = np.array([
+        0.0,          # Δx(0)
+        0.0,          # Δx_dot(0)
+        np.pi / 4,    # Δtheta(0)
+        0.0           # Δtheta_dot(0)
+    ])
+
+
+    # SIMULATION
+
+
+    t0 = 0
+    tf = 30
+
+    time = np.linspace(t0, tf, 3000)
+
+    solution = solve_ivp(
+        closed_loop_dynamics,
+        [t0, tf],
+        X0,
+        t_eval=time
+    )
+
+
+    # EXTRACT STATES
+
+
+    x = solution.y[0]
+    vx = solution.y[1]
+    theta = solution.y[2]
+    omega = solution.y[3]
+
+    # control input
+    phi1 = np.array([
+        -(Kpp @ solution.y[:, i]).item()
+        for i in range(len(time))
+    ])
+
+
+    # PLOTS
+
+
+    plt.figure(figsize=(10, 20))
+
+
+    # Δx(t)
+
+
+    plt.subplot(3,1,1)
+
+    plt.plot(time, x, linewidth=2)
+
+    plt.grid(True)
+
+    plt.ylabel(r'$\Delta x(t)$')
+
+    plt.title("Pole Placement Controller")
+
+
+    # Δθ(t)
+
+
+    plt.subplot(3,1,2)
+
+    plt.plot(time, theta, linewidth=2)
+
+    plt.axhline(np.pi/2, color='red', linestyle='--')
+    plt.axhline(-np.pi/2, color='red', linestyle='--')
+
+    plt.grid(True)
+
+    plt.ylabel(r'$\Delta \theta(t)$')
+
+
+    # Δφ(t)
+
+
+    plt.subplot(3,1,3)
+
+    plt.plot(time, phi1, linewidth=2)
+
+    plt.axhline(np.pi/2, color='red', linestyle='--')
+    plt.axhline(-np.pi/2, color='red', linestyle='--')
+
+    plt.grid(True)
+
+    plt.ylabel(r'$\Delta \phi(t)$')
+
+    plt.xlabel("Time (s)")
+
+    plt.tight_layout()
+
+    plt.show()
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Controller Tuned with Optimal Control
 
     Using optimal control, find a gain matrix $K_{oc}$ that satisfies the same set of requirements that the one defined using pole placement.
