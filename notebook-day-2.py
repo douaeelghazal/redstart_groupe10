@@ -1087,6 +1087,134 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    Equilibrium conditions:
+    \[
+    \dot{x}=\dot{y}=\dot{\theta}=0,
+    \qquad
+    \ddot{x}=\ddot{y}=\ddot{\theta}=0
+    \]
+
+    Using the equations of motion:
+    \[
+    M\ddot{x}=-f\sin(\theta+\phi)=0
+    \]
+    \[
+    M\ddot{y}=f\cos(\theta+\phi)-Mg=0
+    \]
+    \[
+    J\ddot{\theta}=-f\frac{\ell}{2}\sin\phi=0
+    \]
+
+    Since \(f>0\) and \(\ell>0\),
+    \[
+    \sin\phi=0
+    \]
+    and with \(|\phi|<\frac{\pi}{2}\),
+    \[
+    \phi_e=0.
+    \]
+
+    Then,
+    \[
+    -f\sin\theta=0
+    \]
+    gives
+    \[
+    \theta_e=0
+    \]
+    (using \(|\theta|<\frac{\pi}{2}\)).
+
+    Finally,
+    \[
+    f\cos(0)=Mg
+    \]
+    so
+    \[
+    f_e=Mg.
+    \]
+
+    Hence the equilibria are
+    \[
+    \boxed{
+    (x_e,0,y_e,0,0,0),
+    \qquad (x_e,y_e)\in\mathbb{R}^2
+    }
+    \]
+    with equilibrium inputs
+    \[
+    \boxed{
+    f_e=Mg,
+    \qquad
+    \phi_e=0.
+    }
+    \]extbf{Equilibrium conditions:}
+    \[
+    \dot{x}=\dot{y}=\dot{\theta}=0,
+    \qquad
+    \ddot{x}=\ddot{y}=\ddot{\theta}=0
+    \]
+
+    Using the equations of motion:
+    \[
+    M\ddot{x}=-f\sin(\theta+\phi)=0
+    \]
+    \[
+    M\ddot{y}=f\cos(\theta+\phi)-Mg=0
+    \]
+    \[
+    J\ddot{\theta}=-f\frac{\ell}{2}\sin\phi=0
+    \]
+
+    Since \(f>0\) and \(\ell>0\),
+    \[
+    \sin\phi=0
+    \]
+    and with \(|\phi|<\frac{\pi}{2}\),
+    \[
+    \phi_e=0.
+    \]
+
+    Then,
+    \[
+    -f\sin\theta=0
+    \]
+    gives
+    \[
+    \theta_e=0
+    \]
+    (using \(|\theta|<\frac{\pi}{2}\)).
+
+    Finally,
+    \[
+    f\cos(0)=Mg
+    \]
+    so
+    \[
+    f_e=Mg.
+    \]
+
+    Hence the equilibria are
+    \[
+    \boxed{
+    (x_e,0,y_e,0,0,0),
+    \qquad (x_e,y_e)\in\mathbb{R}^2
+    }
+    \]
+    with equilibrium inputs
+    \[
+    \boxed{
+    f_e=Mg,
+    \qquad
+    \phi_e=0.
+    }
+    \]
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Linearized Model
 
     Introduce the error variables $\Delta x$, $\Delta y$, $\Delta \theta$, and $\Delta f$ and $\Delta \phi$ of the state and input values with respect to the generic equilibrium configuration.
