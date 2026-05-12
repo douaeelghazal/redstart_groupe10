@@ -1398,7 +1398,7 @@ def _(J, M, g, l, np):
     A, B = AB_matrices(M, g, l, J)
     print("A =\n", A)
     print("B =\n", B)
-    return
+    return (A,)
 
 
 @app.cell(hide_code=True)
@@ -1408,6 +1408,85 @@ def _(mo):
 
     Is the generic equilibrium asymptotically stable?
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    To study the stability of the equilibrium, we compute the eigenvalues of the matrix \(A\).
+
+    The eigenvalues are the solutions of:
+
+    \[
+    \det(A-\lambda I)=0
+    \]
+
+    The system matrix is:
+
+    \[
+    A=
+    \begin{bmatrix}
+    0&1&0&0&0&0\\
+    0&0&0&0&-1&0\\
+    0&0&0&1&0&0\\
+    0&0&0&0&0&0\\
+    0&0&0&0&0&1\\
+    0&0&0&0&0&0
+    \end{bmatrix}
+    \]
+
+    Thus:
+
+    \[
+    A-\lambda I=
+    \begin{bmatrix}
+    -\lambda&1&0&0&0&0\\
+    0&-\lambda&0&0&-1&0\\
+    0&0&-\lambda&1&0&0\\
+    0&0&0&-\lambda&0&0\\
+    0&0&0&0&-\lambda&1\\
+    0&0&0&0&0&-\lambda
+    \end{bmatrix}
+    \]
+
+    Since this matrix is upper triangular, its determinant is the product of its diagonal terms:
+
+    \[
+    \det(A-\lambda I)=(-\lambda)^6
+    \]
+
+    Therefore:
+
+    \[
+    (-\lambda)^6=0
+    \]
+
+    which gives:
+
+    \[
+    \lambda=0
+    \]
+
+    with multiplicity 6.
+
+    Hence, all eigenvalues are equal to zero:
+
+    \[
+    \boxed{
+    \lambda_1=\lambda_2=\cdots=\lambda_6=0
+    }
+    \]
+
+    Consequently, the equilibrium is not asymptotically stable.
+    """)
+    return
+
+
+@app.cell
+def _(A, np):
+    eigenvalues = np.linalg.eigvals(A)
+    print("Eigenvalues:", eigenvalues)
     return
 
 
