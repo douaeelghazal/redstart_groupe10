@@ -1098,6 +1098,80 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    We introduce perturbation variables around the equilibrium:
+
+    \[
+    \cos(\theta+\phi)\approx 1
+    \]
+
+    The translational dynamics become:
+
+    \[
+    M\ddot{x}
+    =
+    -(Mg+\Delta f)(\Delta\theta+\Delta\phi)
+    \]
+
+    Neglecting second-order terms:
+
+    \[
+    M\ddot{x}\approx -Mg(\Delta\theta+\Delta\phi)
+    \]
+
+    thus:
+
+    \[
+    \ddot{x}=-g(\Delta\theta+\Delta\phi)
+    \]
+
+    For the vertical motion:
+
+    \[
+    M\ddot{y}=Mg+\Delta f-Mg
+    \]
+
+    hence:
+
+    \[
+    \ddot{y}=\frac{\Delta f}{M}
+    \]
+
+    The rotational dynamics become:
+
+    \[
+    J\ddot{\theta}
+    =
+    -(Mg)\frac{\ell}{2}\Delta\phi
+    \]
+
+    therefore:
+
+    \[
+    \ddot{\theta}
+    =
+    -\frac{Mg\ell}{2J}\Delta\phi
+    \]
+
+    Using:
+
+    \[
+    J=\frac{M\ell^2}{12}
+    \]
+
+    we obtain:
+
+    \[
+    \ddot{\theta}
+    =
+    -\frac{6g}{\ell}\Delta\phi
+    \]
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Standard Form
 
     1. What are the matrices $A$ and $B$ associated to this linear model in standard form?
