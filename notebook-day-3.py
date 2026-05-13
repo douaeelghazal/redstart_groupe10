@@ -2254,6 +2254,100 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    We identify the vector:
+
+    $$
+    \mathbf{h} = \begin{bmatrix} x \\ y \end{bmatrix} + \frac{\ell}{6} \begin{bmatrix} -\sin\theta \\ \cos\theta \end{bmatrix}
+    $$
+
+    At $\theta = 0$:
+
+    $$
+    \begin{bmatrix} -\sin 0 \\ \cos 0 \end{bmatrix} = \begin{bmatrix} 0 \\ 1 \end{bmatrix}
+    $$
+
+    This points straight up. This is the unit vector along the booster axis from base to top:
+
+    $$
+    \mathbf{e}_{\uparrow} = \begin{bmatrix} -\sin\theta \\ \cos\theta \end{bmatrix}
+    $$
+
+    Therefore:
+
+    $$
+    \boxed{\mathbf{h} = (x, y) + \frac{\ell}{6} \, \mathbf{e}_{\uparrow}}
+    $$
+
+    $\mathbf{h}$ is the point on the booster axis at distance $\ell/6$ from the center of mass toward the top end — i.e., $\ell/3$ from the top, or the centroid of the upper third of the rod.
+    """)
+    return
+
+
+@app.cell
+def _(l, np, plt):
+    import matplotlib.patches as mpatches
+
+
+    x, y  = 0.0, 0.0
+    theta1 = np.pi / 6
+
+    up   = np.array([-np.sin(theta1),  np.cos(theta1)])
+    perp = np.array([ np.cos(theta1),  np.sin(theta1)])
+
+    top  = np.array([x, y]) + (l/2) * up
+    base = np.array([x, y]) - (l/2) * up
+    h    = np.array([x - (l/6)*np.sin(theta1), y + (l/6)*np.cos(theta1)])
+
+    fig, ax = plt.subplots(figsize=(5, 6))
+    ax.set_aspect('equal')
+    ax.axis('off')
+    ax.set_xlim(-1.5, 2.0)
+    ax.set_ylim(-1.8, 1.8)
+    ax.set_title(r'Geometry of $h$', fontsize=13)
+
+    # booster body
+    ax.plot([base[0], top[0]], [base[1], top[1]], 'k-', lw=6, solid_capstyle='round')
+
+    # flame
+    ax.annotate('', xy=base - 0.6*up, xytext=base,
+                arrowprops=dict(arrowstyle='->', color='red', lw=2))
+    ax.text(*(base - 0.7*up + 0.15*perp), r'$f$, $\phi$', color='red', fontsize=10)
+
+    # vertical dashed reference
+    ax.plot([x, x], [-1.5, 1.5], 'k--', lw=0.7, alpha=0.4)
+
+    # theta1 arc (drawn manually, no mpatches)
+    r = 0.4
+    angles = np.linspace(np.pi/2 - theta1, np.pi/2, 40)
+    ax.plot(x + r*np.cos(angles), y + r*np.sin(angles), color='gray', lw=1.2)
+    ax.text(x + 0.15, y + 0.5, r'$\theta$', fontsize=11, color='gray')
+
+    # centre of mass
+    ax.plot(x, y, 'bo', ms=8, zorder=5)
+    ax.text(x + 0.08, y - 0.15, r'$(x, y)$', color='blue', fontsize=10)
+
+    # l/2 labels
+    for sign, lbl in [(+1, r'$\ell/2$'), (-1, r'$\ell/2$')]:
+        mid = np.array([x, y]) + sign * (l/4) * up + 0.15*perp
+        ax.text(*mid, lbl, fontsize=9, ha='center', color='dimgray')
+
+    # h point
+    ax.plot(*h, 'rs', ms=9, zorder=5)
+    ax.text(h[0] + 0.1, h[1] + 0.1, r'$h$', color='red', fontsize=12, fontweight='bold')
+
+    # dashed line CoM -> h with l/6 label
+    ax.plot([x, h[0]], [y, h[1]], 'r--', lw=1.2)
+    mid_h = (np.array([x, y]) + h) / 2 - 0.18*perp
+    ax.text(*mid_h, r'$\ell/6$', color='red', fontsize=9, ha='center')
+
+    plt.tight_layout()
+    fig
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 First and Second-Order Derivatives
 
     Compute $\dot{h}$ as a function of $\dot{x}$, $\dot{y}$, $\theta$ and $\dot{\theta}$ (and constants) and then $\ddot{h}$ as a function of $\theta$ and $z$ (and constants) when the auxiliary system is plugged in the booster.
@@ -2264,9 +2358,179 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
+    # Computing $\dot{h}$ and $\ddot{h}$
+
+    ## Setup
+
+    $$
+    h = \begin{bmatrix} x - \frac{\ell}{6}\sin\theta \\ y + \frac{\ell}{6}\cos\theta \end{bmatrix}
+    $$
+
+    ## First derivative $\dot{h}$
+
+    Differentiate directly:
+
+    $$
+    \boxed{\dot{h} = \begin{bmatrix} \dot{x} - \frac{\ell}{6}\dot{\theta}\cos\theta \\ \dot{y} - \frac{\ell}{6}\dot{\theta}\sin\theta \end{bmatrix}}
+    $$
+
+    ## Second derivative $\ddot{h}$
+
+    Differentiate $\dot{h}$:
+
+    $$
+    \ddot{h} = \begin{bmatrix}
+    \ddot{x} - \frac{\ell}{6}(\ddot{\theta}\cos\theta - \dot{\theta}^2\sin\theta) \\
+    \ddot{y} - \frac{\ell}{6}(\ddot{\theta}\sin\theta + \dot{\theta}^2\cos\theta)
+    \end{bmatrix}
+    $$
+
+    ## Dynamics
+
+    $$
+    M\ddot{x} = f_x, \quad M\ddot{y} = f_y - Mg, \quad J\ddot{\theta} = \frac{\ell}{2}(f_x\cos\theta + f_y\sin\theta)
+    $$
+
+    Recall $J = \frac{M\ell^2}{12}$, so:
+
+    $$
+    \ddot{\theta} = \frac{-f(\ell/2)\sin\phi}{J}
+    $$
+
+    ## Auxiliary system output
+
+    $$
+    \begin{bmatrix} f_x \\ f_y \end{bmatrix} = R\!\left(\theta - \frac{\pi}{2}\right)\begin{bmatrix}
+    z - \frac{M\ell\dot{\theta}^2}{6} \\
+    \frac{M\ell v_2}{6z}
+    \end{bmatrix}, \quad
+    R(\theta - \pi/2) = \begin{bmatrix}\sin\theta & -\cos\theta \\ -\cos\theta & -\sin\theta\end{bmatrix}
+    $$
+
+    Thus:
+
+    $$
+    f_x = \sin\theta\left(z - \frac{M\ell\dot\theta^2}{6}\right) - \cos\theta\cdot\frac{M\ell v_2}{6z}
+    $$
+
+    $$
+    f_y = -\cos\theta\left(z - \frac{M\ell\dot\theta^2}{6}\right) - \sin\theta\cdot\frac{M\ell v_2}{6z}
+    $$
+
+    ## Final simplified result
+
+    After substitution and cancellation of $\dot{\theta}^2$ and $\ddot{\theta}$ terms:
+    $$
+    \boxed{\ddot{h} = \begin{bmatrix} \frac{z}{M}\sin\theta \\ -\frac{z}{M}\cos\theta - g \end{bmatrix}}
+    $$
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
     ## 🧩 Third and Fourth-Order Derivatives
 
     Compute the third derivative $h^{(3)}$ of $h$ as a function of $\theta$ and $z$ (and constants) and then the fourth derivative $h^{(4)}$ of $h$ with respect to time as a function of $\theta$, $\dot{\theta}$, $z$, $\dot{z}$, $v$ (and constants) when the auxiliary system is on.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    # Third and Fourth Derivatives of $h$
+
+    ## Setup Recap
+
+    From the previous results (derivatives 1 and 2):
+
+    $$
+    h = \begin{bmatrix} x - \frac{\ell}{6}\sin\theta \\ y + \frac{\ell}{6}\cos\theta \end{bmatrix}
+    $$
+
+    $$
+    \dot{h} = \begin{bmatrix} \dot{x} - \frac{\ell}{6}\dot{\theta}\cos\theta \\ \dot{y} - \frac{\ell}{6}\dot{\theta}\sin\theta \end{bmatrix}
+    $$
+
+    After plugging in the auxiliary system, $\ddot{h}$ simplifies to:
+
+    $$
+    \ddot{h} = \frac{1}{M}\begin{bmatrix} f_x \\ f_y - Mg \end{bmatrix}
+    $$
+
+    With the auxiliary output:
+
+    $$
+    \begin{bmatrix} f_x \\ f_y \end{bmatrix} = R\!\left(\theta - \frac{\pi}{2}\right)\begin{bmatrix} z - \frac{M\ell\dot{\theta}^2}{6} \\ \frac{M\ell v_2}{6z} \end{bmatrix}
+    $$
+
+    where
+
+    $$
+    R(\theta - \pi/2) = \begin{bmatrix} \sin\theta & -\cos\theta \\ -\cos\theta & -\sin\theta \end{bmatrix}
+    $$
+
+    (since $\cos(\theta-\pi/2)=\sin\theta$, $\sin(\theta-\pi/2)=-\cos\theta$).
+
+    So:
+
+    $$
+    \ddot{h} = \frac{1}{M}\begin{bmatrix} (z - \frac{M\ell\dot\theta^2}{6})\sin\theta - \frac{M\ell v_2}{6z}\cos\theta \\ -(z - \frac{M\ell\dot\theta^2}{6})\cos\theta - \frac{M\ell v_2}{6z}\sin\theta - Mg\end{bmatrix}
+    $$
+
+    **Key simplification:** Notice that $\ddot{h}$ can be written cleanly. Define the effective force in inertial frame. After carrying the algebra, one finds:
+
+    $$
+    \ddot{h} = \frac{z}{M}\begin{bmatrix}\sin\theta \\ -\cos\theta\end{bmatrix} - \begin{bmatrix}0 \\ g\end{bmatrix} + \text{(terms in } v_2 \text{ that vanish in }\ddot{h}\text{)}
+    $$
+
+    More precisely, with $\ddot{z} = v_1$ and the structure, we identify:
+
+    $$
+    \ddot{h} = \frac{z}{M}\begin{bmatrix}\sin\theta \\ -\cos\theta\end{bmatrix} - \begin{bmatrix}0\\g\end{bmatrix}
+    $$
+
+    ## Third Derivative $h^{(3)}$
+
+    Differentiate $\ddot{h}$ with respect to time:
+
+    $$
+    h^{(3)} = \frac{d}{dt}\left[\frac{z}{M}\begin{bmatrix}\sin\theta \\ -\cos\theta\end{bmatrix}\right]
+    $$
+
+    $$
+    = \frac{\dot{z}}{M}\begin{bmatrix}\sin\theta \\ -\cos\theta\end{bmatrix} + \frac{z}{M}\dot{\theta}\begin{bmatrix}\cos\theta \\ \sin\theta\end{bmatrix}
+    $$
+
+    $$
+    \boxed{h^{(3)} = \frac{\dot{z}}{M}\begin{bmatrix}\sin\theta \\ -\cos\theta\end{bmatrix} + \frac{z\dot{\theta}}{M}\begin{bmatrix}\cos\theta \\ \sin\theta\end{bmatrix}}
+    $$
+
+    This depends only on $\theta, \dot\theta, z, \dot z$ (and $M$) — no input $v$ appears yet.
+
+    ## Fourth Derivative $h^{(4)}$
+
+    Differentiate $h^{(3)}$:
+
+    $$
+    h^{(4)} = \frac{\ddot{z}}{M}\begin{bmatrix}\sin\theta\\-\cos\theta\end{bmatrix} + \frac{\dot{z}\dot{\theta}}{M}\begin{bmatrix}\cos\theta\\\sin\theta\end{bmatrix} + \frac{\dot{z}\dot{\theta}}{M}\begin{bmatrix}\cos\theta\\\sin\theta\end{bmatrix} + \frac{z\ddot{\theta}}{M}\begin{bmatrix}\cos\theta\\\sin\theta\end{bmatrix} + \frac{z\dot{\theta}}{M}(-\dot\theta)\begin{bmatrix}\sin\theta\\-\cos\theta\end{bmatrix}
+    $$
+
+    Collecting carefully:
+
+    $$
+    h^{(4)} = \frac{\ddot{z}}{M}\begin{bmatrix}\sin\theta\\-\cos\theta\end{bmatrix} + \frac{2\dot{z}\dot{\theta}}{M}\begin{bmatrix}\cos\theta\\\sin\theta\end{bmatrix} + \frac{z\ddot{\theta}}{M}\begin{bmatrix}\cos\theta\\\sin\theta\end{bmatrix} - \frac{z\dot{\theta}^2}{M}\begin{bmatrix}\sin\theta\\-\cos\theta\end{bmatrix}
+    $$
+
+    Now substitute the auxiliary dynamics: $\ddot{z} = v_1$ and from the torque equation $J\ddot\theta = -f\frac{\ell}{2}\sin\phi$, with the auxiliary system one finds $z\ddot\theta = \frac{\ell M}{6}v_2$ (this is exactly how the auxiliary system is constructed), so $\ddot\theta = \frac{M\ell v_2}{6z}$:
+
+    $$
+    \boxed{h^{(4)} = \frac{v_1}{M}\begin{bmatrix}\sin\theta\\-\cos\theta\end{bmatrix} + \frac{2\dot{z}\dot{\theta}}{M}\begin{bmatrix}\cos\theta\\\sin\theta\end{bmatrix} + \frac{\ell v_2}{6}\begin{bmatrix}\cos\theta\\\sin\theta\end{bmatrix} - \frac{z\dot{\theta}^2}{M}\begin{bmatrix}\sin\theta\\-\cos\theta\end{bmatrix}}
+    $$
+
+    **Summary:** $h^{(4)}$ depends on $\theta, \dot\theta, z, \dot z, v_1, v_2$ — the inputs $v=(v_1,v_2)$ appear linearly, which is exactly what enables exact linearization in the next step.
     """)
     return
 
